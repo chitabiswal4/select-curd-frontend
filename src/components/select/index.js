@@ -8,7 +8,6 @@ const SelectCurd = () => {
   const session_data = check
     ? JSON.parse(sessionStorage.getItem('UserAnchor') || {})
     : null;
-  // const session_data = JSON.parse(sessionStorage.getItem('UserAnchor') || {});
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState(session_data);
