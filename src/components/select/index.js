@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import CreatableSelect from 'react-select/creatable';
 import userAnchorClientApi from '../../client-api/user-anchor';
-import {Form, Button, InputGroup} from 'react-bootstrap';
+import {Form, Button} from 'react-bootstrap';
 
 const SelectCurd = () => {
   const check = sessionStorage.getItem('UserAnchor') !== null;
