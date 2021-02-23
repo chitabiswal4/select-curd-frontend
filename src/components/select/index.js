@@ -1,10 +1,14 @@
 import React, {useState, useEffect} from 'react';
 import CreatableSelect from 'react-select/creatable';
 import userAnchorClientApi from '../../client-api/user-anchor';
-import {Form, Button} from 'react-bootstrap';
+import {Form, Button, InputGroup} from 'react-bootstrap';
 
 const SelectCurd = () => {
-  const session_data = JSON.parse(sessionStorage.getItem('UserAnchor') || {});
+  const check = sessionStorage.getItem('UserAnchor') !== null;
+  const session_data = check
+    ? JSON.parse(sessionStorage.getItem('UserAnchor') || {})
+    : null;
+  // const session_data = JSON.parse(sessionStorage.getItem('UserAnchor') || {});
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState(session_data);
@@ -103,7 +107,7 @@ const SelectCurd = () => {
           {edit && session_data ? (
             <>
               {' '}
-              <Form onSubmit={updateAnchor}>
+              <Form id="my-form" onSubmit={updateAnchor}>
                 <Form.Group>
                   <Form.Label>Edit Anchor</Form.Label>
                   <Form.Control
@@ -115,13 +119,6 @@ const SelectCurd = () => {
                   />
                   <Form.Text className="text-muted">Edit the anchor</Form.Text>
                 </Form.Group>
-
-                <Button variant="success" type="submit">
-                  Edit
-                </Button>
-                <Button variant="primary" onClick={() => setEdit(false)}>
-                  Cancel
-                </Button>
               </Form>{' '}
             </>
           ) : null}
@@ -142,16 +139,29 @@ const SelectCurd = () => {
             />
           </div>
           <div>
-            {selected && session_data ? (
+            {selected && session_data && !edit ? (
               <>
-                <Button variant="warning" onClick={() => setEdit(true)}>
+                <Button variant="success" onClick={() => setEdit(true)}>
                   Edit
                 </Button>
                 <Button variant="danger" onClick={() => deleteAnchor()}>
-                  Delete
+                  confirm Delete
                 </Button>
               </>
-            ) : null}
+            ) : (
+              <>
+                {edit ? (
+                  <>
+                    <Button variant="success" form="my-form" type="submit">
+                      save
+                    </Button>
+                    <Button variant="danger" onClick={() => setEdit(false)}>
+                      cancel
+                    </Button>
+                  </>
+                ) : null}
+              </>
+            )}
           </div>
         </div>
       </div>
