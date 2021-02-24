@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import CreatableSelect from 'react-select/creatable';
-import userAnchorClientApi from '../../client-api/user-anchor';
+import AnchorClientApi from '../../client-api/anchor';
 import {Form, Button} from 'react-bootstrap';
 
 const SelectCurd = () => {
-  const check = sessionStorage.getItem('UserAnchor') !== null;
+  const check = sessionStorage.getItem('Anchor') !== null;
   const session_data = check
-    ? JSON.parse(sessionStorage.getItem('UserAnchor') || {})
+    ? JSON.parse(sessionStorage.getItem('Anchor') || {})
     : null;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,11 +15,12 @@ const SelectCurd = () => {
   const [edit, setEdit] = useState(false);
   const [dataToBeChange, setDataChange] = useState();
   const [selected, isSelected] = useState(false);
+  const [IsDelete, SetDelete] = useState(false);
 
   //geting data from the session storage using useEffect
   useEffect(() => {
     if (value !== null) {
-      setDataChange(value.user_anchor);
+      setDataChange(value.anchor);
     } else {
       setDataChange(null);
     }
@@ -28,16 +29,16 @@ const SelectCurd = () => {
   //hendle onchange for select creatable form and saving the selected data to session storage
   const handleChange = (data) => {
     isSelected(true);
-    sessionStorage.setItem('UserAnchor', JSON.stringify(data));
+    sessionStorage.setItem('Anchor', JSON.stringify(data));
     setValue(data);
   };
 
   //creating new anchor and saving to the db
   const handleCreate = (data) => {
     setLoading(true);
-    let d = {user_anchor: data};
+    let d = {anchor: data};
 
-    userAnchorClientApi.saveUserAnchor(d).then((res) => {
+    AnchorClientApi.saveAnchor(d).then((res) => {
       setLoading(false);
     });
   };
@@ -50,7 +51,7 @@ const SelectCurd = () => {
   //getting all data from db
   useEffect(() => {
     (async () => {
-      await userAnchorClientApi.getAllUserAnchor().then((result) => {
+      await AnchorClientApi.getAllAnchor().then((result) => {
         setData(result.data);
       });
     })();
@@ -60,7 +61,7 @@ const SelectCurd = () => {
   useEffect(() => {
     (async () => {
       let wdata = data.map((e) => {
-        e.label = e.user_anchor;
+        e.label = e.anchor;
         return e;
       });
 
@@ -77,22 +78,30 @@ const SelectCurd = () => {
       id: value._id,
       data: dataToBeChange,
     };
-    userAnchorClientApi.updateUserAnchorById(d).then((res) => {
-      setValue(null);
-      sessionStorage.setItem('UserAnchor', null);
+    AnchorClientApi.updateAnchorById(d).then((res) => {
+      var sd = {
+        _id: res.data.data._id,
+        anchor: res.data.data.anchor,
+        __v: res.data.data.__v,
+        label: res.data.data.anchor,
+      };
+      setValue(sd);
+      sessionStorage.setItem('Anchor', JSON.stringify(sd));
       setLoading(false);
     });
   };
 
   //deleting the anchor from db
-  const deleteAnchor = () => {
+  const deleteAnchor = (e) => {
+    e.preventDefault();
     setLoading(true);
+    SetDelete(false);
     var d = {
       id: value._id,
     };
-    userAnchorClientApi.deleteAnchorById(d).then((res) => {
+    AnchorClientApi.deleteAnchorById(d).then((res) => {
       setValue(null);
-      sessionStorage.setItem('UserAnchor', null);
+      sessionStorage.setItem('Anchor', null);
       setLoading(false);
       setEdit(false);
     });
@@ -105,10 +114,8 @@ const SelectCurd = () => {
           {/* this is the form where we can update the value this will appear when we click on the edit button by setEdit(true) */}
           {edit && session_data ? (
             <>
-              {' '}
-              <Form id="my-form" onSubmit={updateAnchor}>
+              <Form id="edit-form" onSubmit={updateAnchor}>
                 <Form.Group>
-                  <Form.Label>Edit Anchor</Form.Label>
                   <Form.Control
                     type="text"
                     name="component"
@@ -116,16 +123,56 @@ const SelectCurd = () => {
                     value={dataToBeChange}
                     placeholder="Edit Anchor"
                   />
-                  <Form.Text className="text-muted">Edit the anchor</Form.Text>
                 </Form.Group>
-              </Form>{' '}
+
+                <Button
+                  variant="success"
+                  style={{margin: '5px'}}
+                  form="edit-form"
+                  type="submit"
+                >
+                  save
+                </Button>
+
+                <Button variant="danger" onClick={() => setEdit(false)}>
+                  cancel
+                </Button>
+              </Form>
+            </>
+          ) : null}
+
+          {IsDelete && session_data ? (
+            <>
+              {' '}
+              <Form id="delete-form" onSubmit={deleteAnchor}>
+                <Form.Group>
+                  <Form.Control
+                    type="text"
+                    name="components"
+                    value={dataToBeChange ? dataToBeChange : ''}
+                    placeholder="Edit Anchor"
+                    disabled
+                  />
+                </Form.Group>
+                <Button
+                  variant="danger"
+                  style={{margin: '5px'}}
+                  form="delete-form"
+                  type="submit"
+                >
+                  confirm delete
+                </Button>
+                <Button variant="success" onClick={() => SetDelete(false)}>
+                  cancel
+                </Button>
+              </Form>
             </>
           ) : null}
         </div>
         {/* this is the creatable components with some basic inline css */}
         <div style={{width: '400px', margin: 'auto'}}>
           <div>
-            <p>Select User Anchor</p>
+            <p>Select Anchor</p>
             <CreatableSelect
               maxMenuHeight={200}
               isClearable
@@ -138,29 +185,20 @@ const SelectCurd = () => {
             />
           </div>
           <div>
-            {selected && session_data && !edit ? (
+            {selected && session_data && !edit && !IsDelete ? (
               <>
-                <Button variant="success" onClick={() => setEdit(true)}>
+                <Button
+                  variant="success"
+                  style={{margin: '5px'}}
+                  onClick={() => setEdit(true)}
+                >
                   Edit
                 </Button>
-                <Button variant="danger" onClick={() => deleteAnchor()}>
-                  confirm Delete
+                <Button variant="danger" onClick={() => SetDelete(true)}>
+                  Delete
                 </Button>
               </>
-            ) : (
-              <>
-                {edit ? (
-                  <>
-                    <Button variant="success" form="my-form" type="submit">
-                      save
-                    </Button>
-                    <Button variant="danger" onClick={() => setEdit(false)}>
-                      cancel
-                    </Button>
-                  </>
-                ) : null}
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
