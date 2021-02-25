@@ -6,7 +6,8 @@ const client = axios.create({
 });
 
 export const saveAnchor = (payload) => client.post(`/post-anchor`, payload);
-export const getAllAnchor = () => client.get(`/get-anchor`);
+export const getAllAnchor = (payload) =>
+  client.get(`/get-anchor`, {params: {payload}});
 export const updateAnchorById = (payload) => client.put(`/update`, payload);
 export const deleteAnchorById = (payload) =>
   client.delete('/delete', {data: payload});
